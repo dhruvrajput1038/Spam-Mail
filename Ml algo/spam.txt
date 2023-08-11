@@ -1,0 +1,69 @@
+import numpy as np
+import pandas as pd
+
+
+mail=pd.read_csv("/content/mail_data.csv")
+mail
+
+# replacing  null value with null string
+mail=mail.where((pd.notnull(mail)),"")
+
+
+y=mail.Category
+x=mail.Message
+
+
+# converting spam as 1 adn ham as 0
+label = {'spam': 1,'ham': 0}
+y = [label[item] for item in y]
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+xvector = TfidfVectorizer(min_df =1,stop_words="english",lowercase =True)
+xvector1 = xvector.fit_transform(x)
+
+
+from sklearn.model_selection import train_test_split
+xtrain,xtest,ytrain,ytest=train_test_split(xvector1,y,test_size=0.2,random_state=3)
+
+
+from sklearn.linear_model import LogisticRegression
+model = LogisticRegression()
+model.fit(xtrain,ytrain)
+
+
+
+# Prediction on training data
+from sklearn.metrics import accuracy_score
+
+predtraindata = model.predict(xtrain)
+acconxtrain = accuracy_score(ytrain,predtraindata)
+acconxtrain
+
+
+# predict System
+
+input = ["FREE!!"]
+data = xvector.transform(input)
+
+pre = model.predict(data)
+# pre
+
+if(pre[0]==1):print("SPAM")
+else:print("HAM")
+
+
+import pickle
+pickle.dump(model, open('model.pkl', 'wb'))
+
+
+pickled_model = pickle.load(open('model.pkl', 'rb'))
+
+m = ["Free!! Free!! Free!!"]
+d = xvector.transform(m)
+p=pickled_model.predict(d)
+if(p[0]==1):print("SPAM")
+else:print("HAM")
+
+
+
+pickle.dump(xvector, open("xvector.pickle", "wb")) 
